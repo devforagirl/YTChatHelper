@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Danmaku Settings</title>
+  <style>
+    body {
+      font-family: -apple-system, system-ui, sans-serif;
+      padding: 15px;
+      background: #f4f4f4;
+      color: #333;
+    }
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #ff0000;
+      border-bottom: 2px solid #ff0000;
+      padding-bottom: 5px;
+    }
+    .setting-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    select, input[type="range"] {
+      width: 100%;
+    }
+    .value-display {
+      font-size: 12px;
+      color: #666;
+      text-align: right;
+      margin-top: 5px;
+    }
+    .hint {
+      font-size: 12px;
+      color: #999;
+      margin-top: 20px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Danmaku Control</h2>
+    
+    <div class="setting-group">
+      <label for="fontFamily">Font Family</label>
+      <select id="fontFamily">
+        <option value="Arial" selected>Arial</option>
+        <option value="'Microsoft YaHei'">Microsoft YaHei</option>
+        <option value="SimHei">SimHei (黑体)</option>
+        <option value="Impact">Impact</option>
+        <option value="cursive">Cursive</option>
+      </select>
+    </div>
+
+    <div class="setting-group">
+      <label for="fontSize">Base Font Size</label>
+      <input type="range" id="fontSize" min="16" max="64" step="2" value="24">
+      <div class="value-display"><span id="fontSizeValue">24</span>px</div>
+    </div>
+
+    <div class="setting-group">
+      <label for="fontSizeRandom">Font Size Random Range</label>
+      <input type="range" id="fontSizeRandom" min="0" max="0.5" step="0.05" value="0.05">
+      <div class="value-display"><span id="fontSizeRandomValue">5</span>%</div>
+    </div>
+
+    <div class="setting-group">
+      <label for="speed">Base Speed</label>
+      <input type="range" id="speed" min="1.0" max="4.0" step="0.1" value="1.0">
+      <div class="value-display"><span id="speedValue">1.0</span></div>
+    </div>
+
+    <div class="setting-group">
+      <label for="opacity">Opacity</label>
+      <input type="range" id="opacity" min="0.1" max="1.0" step="0.1" value="1.0">
+      <div class="value-display"><span id="opacityValue">1.0</span></div>
+    </div>
+
+    <div class="setting-group">
+      <label for="position">Display Position</label>
+      <select id="position">
+        <option value="all" selected>Full Screen</option>
+        <option value="top">Top Half</option>
+        <option value="bottom">Bottom Half</option>
+      </select>
+    </div>
+
+    <div class="hint">
+      * Settings take effect immediately on all YouTube tabs.
+    </div>
+  </div>
+  <script src="sidepanel.js"></script>
+</body>
+</html>
