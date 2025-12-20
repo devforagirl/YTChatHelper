@@ -4,6 +4,7 @@ node_modules/
 # OS specific files
 .DS_Store
 Thumbs.db
+feedbacks.txt
 
 # IDEs
 .idea/
