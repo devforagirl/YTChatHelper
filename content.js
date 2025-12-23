@@ -1,17 +1,17 @@
-(function() {
+(function () {
     // ==========================================
     // Constants & Selectors (Centralized Management)
     // ==========================================
     const SELECTORS = {
         CHAT_CONTAINER: [
             '#items.style-scope.yt-live-chat-item-list-renderer',
-            '#chat-messages #items', 
+            '#chat-messages #items',
             'yt-live-chat-item-list-renderer'
         ],
         CHAT_MESSAGE_TEXT: '#message',
         PLAYER_CONTAINER: [
-            '#movie_player', 
-            '.html5-video-player', 
+            '#movie_player',
+            '.html5-video-player',
             '#ytd-player'
         ],
         HIDE_CHAT_TARGETS: 'ytd-live-chat-frame, #chat, #panels-full-bleed-container'
@@ -96,8 +96,8 @@
                 this.styleEl.id = 'yt-danmaku-hide-chat-style';
                 document.head.appendChild(this.styleEl);
             }
-            this.styleEl.textContent = shouldHide 
-                ? `${SELECTORS.HIDE_CHAT_TARGETS} { display: none !important; }` 
+            this.styleEl.textContent = shouldHide
+                ? `${SELECTORS.HIDE_CHAT_TARGETS} { display: none !important; }`
                 : '';
         }
     }
@@ -120,6 +120,7 @@
             // Do not auto-start on init, wait for ConfigManager notification
             chrome.runtime.onMessage.addListener((message) => {
                 if (message.type === 'ADD_DANMAKU' && this.isRunning) {
+                    if (document.hidden) return; // Prevent bursts when tab is in background
                     this.addDanmaku(message.text);
                 }
             });
@@ -136,7 +137,7 @@
             if (!this.isRunning) return;
             console.log('YTChatHelper: Renderer Stopping...');
             this.isRunning = false;
-            
+
             // Stop animation loop
             if (this.animationFrameId) {
                 cancelAnimationFrame(this.animationFrameId);
@@ -165,7 +166,7 @@
             };
 
             this.playerEl = find();
-            
+
             if (!this.playerEl) {
                 setTimeout(() => {
                     if (this.isRunning) this.findPlayerAndMount();
@@ -192,7 +193,7 @@
 
             const ro = new ResizeObserver(() => this.throttledResize());
             ro.observe(this.playerEl);
-            
+
             this.syncCanvasSize();
             this.animate();
         }
@@ -220,16 +221,16 @@
             const trackHeight = conf.fontSize * 1.6;
             let startY = 0;
             let endY = this.canvas.height;
-            
+
             if (conf.position === 'top') endY = this.canvas.height / 2;
             else if (conf.position === 'bottom') startY = this.canvas.height / 2;
-            
+
             const trackCount = Math.floor((endY - startY) / trackHeight) - 1;
-            
+
             this.tracks = [];
             for (let i = 0; i < trackCount; i++) {
-                this.tracks.push({ 
-                    y: startY + (i + 1) * trackHeight, 
+                this.tracks.push({
+                    y: startY + (i + 1) * trackHeight,
                     lastX: 0,
                     lastDanmaku: null
                 });
@@ -238,16 +239,23 @@
 
         addDanmaku(text) {
             if (!this.canvas) return;
+
+            // Dynamic capacity limit based on track count
+            const maxDanmakus = this.tracks.length * 5;
+            if (this.danmakus.length >= maxDanmakus) {
+                return;
+            }
+
             this.danmakus.push(new DanmakuItem(text, this.configMgr.get(), this.canvas, this.ctx, this.tracks));
         }
 
         animate() {
             if (!this.isRunning || !this.ctx) return;
-            
+
             const conf = this.configMgr.get();
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.ctx.globalAlpha = conf.opacity;
-            
+
             for (let i = this.danmakus.length - 1; i >= 0; i--) {
                 const d = this.danmakus[i];
                 d.update();
@@ -256,7 +264,7 @@
                     this.danmakus.splice(i, 1);
                 }
             }
-            
+
             this.animationFrameId = requestAnimationFrame(() => this.animate());
         }
     }
@@ -269,18 +277,18 @@
             this.text = text;
             this.ctx = ctx;
             this.config = config;
-            
+
             const variation = (1 - config.fontSizeRandom) + (Math.random() * config.fontSizeRandom * 2);
             this.fontSize = Math.floor(config.fontSize * variation);
             this.speed = (config.speed * (0.95 + Math.random() * 0.3)) + (Math.random() * 0.3);
-            
+
             this.ctx.font = `bold ${this.fontSize}px ${config.fontFamily}`;
             this.width = this.ctx.measureText(text).width;
             this.x = canvas.width;
-            
+
             this.track = this.findBestTrack(tracks, canvas.width);
             this.y = this.track ? this.track.y : 50;
-            
+
             if (this.track) {
                 this.track.lastDanmaku = this;
                 this.track.lastX = this.x + this.width;
@@ -391,7 +399,7 @@
         sendMessage(text) {
             try {
                 chrome.runtime.sendMessage({ type: 'NEW_MESSAGE_DATA', text: text });
-            } catch (e) {}
+            } catch (e) { }
         }
     }
 
