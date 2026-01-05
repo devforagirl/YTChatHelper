@@ -25,7 +25,7 @@
     }
 
     .container {
-      padding: 16px;
+      padding: 12px;
     }
 
     /* 标题栏 & 主开关 */
@@ -33,24 +33,41 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
       border-bottom: 2px solid var(--accent);
     }
 
     header h2 {
       margin: 0;
-      font-size: 16px; /* 稍微调小一点以适应长标题 */
+      font-size: 14px;
       font-weight: 700;
       color: var(--accent);
+      flex-grow: 1;
+    }
+
+    .rate-link {
+      text-decoration: none;
+      color: #ff9800;
+      font-weight: bold;
+      font-size: 14px;
+      margin: 0 10px;
+      padding: 2px 6px;
+      border: 1px solid #ff9800;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .rate-link:hover {
+      background: #ff9800;
+      color: white;
     }
 
     /* 主开关样式 */
     .power-switch {
       position: relative;
       display: inline-block;
-      width: 48px;
-      height: 24px;
+      width: 42px;
+      height: 22px;
     }
     .power-switch input { opacity: 0; width: 0; height: 0; }
     .power-slider {
@@ -59,12 +76,12 @@
       top: 0; left: 0; right: 0; bottom: 0;
       background-color: #ccc;
       transition: .3s;
-      border-radius: 24px;
+      border-radius: 22px;
     }
     .power-slider:before {
       position: absolute;
       content: "";
-      height: 18px; width: 18px;
+      height: 16px; width: 16px;
       left: 3px; bottom: 3px;
       background-color: white;
       transition: .3s;
@@ -72,10 +89,10 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
     input:checked + .power-slider { background-color: var(--accent); }
-    input:checked + .power-slider:before { transform: translateX(24px); }
+    input:checked + .power-slider:before { transform: translateX(20px); }
 
     .setting-group {
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       transition: opacity 0.3s;
     }
 
@@ -89,17 +106,17 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     label {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text-sub);
       font-weight: 500;
     }
 
     .value-display {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--accent);
       font-family: monospace;
       font-weight: bold;
@@ -115,32 +132,30 @@
     input[type=range]:focus { outline: none; }
     input[type=range]::-webkit-slider-runnable-track {
       width: 100%;
-      height: 4px;
+      height: 3px;
       cursor: pointer;
       background: #e0e0e0;
       border-radius: 2px;
     }
     input[type=range]::-webkit-slider-thumb {
-      height: 16px; width: 16px;
+      height: 14px; width: 14px;
       border-radius: 50%;
       background: var(--accent);
       cursor: pointer;
       -webkit-appearance: none;
-      margin-top: -6px;
+      margin-top: -5.5px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-      transition: transform 0.1s;
     }
-    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.1); }
 
     /* Select */
     select {
       width: 100%;
-      padding: 8px;
+      padding: 4px 8px;
       background-color: var(--card-bg);
       color: var(--text-main);
       border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 13px;
+      border-radius: 4px;
+      font-size: 12px;
       outline: none;
       cursor: pointer;
     }
@@ -151,15 +166,15 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-top: 15px;
-      margin-top: 10px;
+      padding-top: 8px;
+      margin-top: 8px;
       border-top: 1px dashed #ddd;
     }
     
     .mini-switch {
       position: relative;
       display: inline-block;
-      width: 36px; height: 18px;
+      width: 32px; height: 16px;
     }
     .mini-switch input { opacity: 0; width: 0; height: 0; }
     .mini-slider {
@@ -168,19 +183,19 @@
       top: 0; left: 0; right: 0; bottom: 0;
       background-color: #ccc;
       transition: .3s;
-      border-radius: 18px;
+      border-radius: 16px;
     }
     .mini-slider:before {
       position: absolute;
       content: "";
-      height: 14px; width: 14px;
+      height: 12px; width: 12px;
       left: 2px; bottom: 2px;
       background-color: white;
       transition: .3s;
       border-radius: 50%;
     }
     input:checked + .mini-slider { background-color: var(--accent); }
-    input:checked + .mini-slider:before { transform: translateX(18px); }
+    input:checked + .mini-slider:before { transform: translateX(16px); }
 
     /* Footer & Rate Me */
     footer {
@@ -214,13 +229,25 @@
 <body>
   <div class="container">
     <header>
-      <!-- Title updated -->
-      <h2 data-i18n="appName">Youtube Livechat Danmaku Helper</h2>
+      <!-- Title placeholder for dynamic version -->
+      <h2 id="appTitle">Livechat Danmaku Helper</h2>
+      <a href="https://chromewebstore.google.com/detail/youtube-livechat-danmaku/dgflmodfjpkkfigdcghlogiecbahjcld/reviews" target="_blank" class="rate-link" id="rateBtn">5★</a>
       <label class="power-switch">
         <input type="checkbox" id="enabled">
         <span class="power-slider"></span>
       </label>
     </header>
+
+    <div class="setting-group">
+      <div class="label-row">
+        <label for="position" data-i18n="displayArea">Display Area</label>
+      </div>
+      <select id="position">
+        <option value="all" data-i18n="fullScreen">Full Screen</option>
+        <option value="top" data-i18n="topHalf">Top Half (50%)</option>
+        <option value="bottom" data-i18n="bottomHalf">Bottom Half (50%)</option>
+      </select>
+    </div>
 
     <div class="setting-group">
       <div class="label-row">
@@ -297,14 +324,14 @@
       </label>
     </div>
 
-    <footer>
-      <div class="rate-btn" id="rateBtn" data-i18n="rateMe">
-        Rate me 5 stars ★
-      </div>
-      <div class="version-info">
-        v2.8
-      </div>
-    </footer>
+    <div class="toggle-group">
+      <label for="debugMode" data-i18n="debugMode">Debug Mode (Logs)</label>
+      <label class="mini-switch">
+        <input type="checkbox" id="debugMode">
+        <span class="mini-slider"></span>
+      </label>
+    </div>
+
   </div>
   <script src="popup.js"></script>
 </body>

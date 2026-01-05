@@ -1,4 +1,21 @@
 (function () {
+    // Utility for conditional logging
+    const debugLog = (message, ...args) => {
+        chrome.storage.local.get('debugMode', (res) => {
+            if (res.debugMode) {
+                console.log(
+                    `%c[YTChatHelper]%c ${message}`,
+                    "color: #e91e63; font-weight: bold; padding: 2px 4px; border-radius: 3px; background: #fff1f0;",
+                    "color: default; font-weight: normal;",
+                    ...args
+                );
+            }
+        });
+    };
+
+    // Initial Injection Log
+    debugLog(`Script Injected | Time: ${new Date().toLocaleTimeString()} | Frame: ${window.self === window.top ? 'Main' : 'Chat/Sub'} | URL: ${window.location.pathname}`);
+
     // ==========================================
     // Constants & Selectors (Centralized Management)
     // ==========================================
@@ -23,10 +40,13 @@
         SAFE_MARGIN_PX: 80
     };
 
-    const CONTEXT = {
-        isTopFrame: window.self === window.top,
-        isWatchPage: window.location.pathname === '/watch',
-        isChatIframe: window.location.pathname.includes('/live_chat')
+    const getContext = () => {
+        const path = window.location.pathname;
+        return {
+            isTopFrame: window.self === window.top,
+            isWatchPage: path === '/watch' || path.startsWith('/live/'),
+            isChatIframe: path.includes('/live_chat')
+        };
     };
 
     // ==========================================
@@ -42,7 +62,8 @@
                 speed: 1.0,
                 opacity: 1.0,
                 position: 'all',
-                hideChat: false
+                hideChat: false,
+                debugMode: false
             };
             this.onUpdate = onUpdate;
             this.init();
@@ -91,14 +112,25 @@
             // Only hide if global switch is ON and hideChat is TRUE
             const shouldHide = config.enabled && config.hideChat;
 
-            if (!this.styleEl) {
-                this.styleEl = document.createElement('style');
-                this.styleEl.id = 'yt-danmaku-hide-chat-style';
-                document.head.appendChild(this.styleEl);
+            if (shouldHide) {
+                if (!this.styleEl) {
+                    this.styleEl = document.createElement('style');
+                    this.styleEl.id = 'yt-danmaku-hide-chat-style';
+                    document.head.appendChild(this.styleEl);
+                }
+                this.styleEl.textContent = `${SELECTORS.HIDE_CHAT_TARGETS} { display: none !important; }`;
+                debugLog('Chat window hidden via StyleInjector.');
+            } else {
+                this.cleanup();
             }
-            this.styleEl.textContent = shouldHide
-                ? `${SELECTORS.HIDE_CHAT_TARGETS} { display: none !important; }`
-                : '';
+        }
+
+        cleanup() {
+            if (this.styleEl) {
+                this.styleEl.remove();
+                this.styleEl = null;
+                debugLog('Chat window visibility restored (StyleInjector cleaned up).');
+            }
         }
     }
 
@@ -413,17 +445,47 @@
             this.styleInjector = null;
             this.observer = null;
 
-            if (CONTEXT.isTopFrame && CONTEXT.isWatchPage) {
-                this.renderer = new DanmakuRenderer(this.configMgr);
-                this.styleInjector = new StyleInjector();
+            this.initModules();
+
+            // Listen for YouTube SPA navigation
+            if (window.self === window.top) {
+                window.addEventListener('yt-navigate-finish', () => {
+                    debugLog('Navigation detected (yt-navigate-finish), re-evaluating context...');
+                    this.initModules();
+                    // Force update if config is already loaded
+                    this.onConfigUpdate(this.configMgr.get());
+                });
+            }
+        }
+
+        initModules() {
+            const ctx = getContext();
+            debugLog(`Context Check | Main: ${ctx.isTopFrame} | Watch: ${ctx.isWatchPage} | Chat: ${ctx.isChatIframe}`);
+
+            if (ctx.isTopFrame && ctx.isWatchPage) {
+                if (!this.renderer) {
+                    debugLog('Initializing Renderer & StyleInjector...');
+                    this.renderer = new DanmakuRenderer(this.configMgr);
+                    this.styleInjector = new StyleInjector();
+                }
+            } else if (ctx.isTopFrame && !ctx.isWatchPage) {
+                if (this.renderer) {
+                    debugLog('Leaving watch page, stopping renderer and cleaning up styles...');
+                    this.renderer.stop();
+                    if (this.styleInjector) this.styleInjector.cleanup();
+                    this.renderer = null;
+                    this.styleInjector = null;
+                }
             }
 
-            if (CONTEXT.isChatIframe) {
+            if (ctx.isChatIframe && !this.observer) {
+                debugLog('Initializing DOMObserver...');
                 this.observer = new DOMObserver();
             }
         }
 
         onConfigUpdate(config) {
+            const ctx = getContext();
             // 1. Global Switch Control
             if (config.enabled) {
                 if (this.renderer) this.renderer.start();
@@ -434,7 +496,7 @@
             }
 
             // 2. Visual Style Control (Top Frame Only)
-            if (CONTEXT.isTopFrame && this.renderer) {
+            if (ctx.isTopFrame && this.renderer) {
                 this.styleInjector.update(config); // Handle chat hiding
                 if (config.enabled) {
                     this.renderer.updateTracks(); // Real-time font/area update

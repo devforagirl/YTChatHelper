@@ -2,8 +2,8 @@ const ids = ['fontFamily', 'fontSize', 'fontSizeRandom', 'speed', 'opacity', 'po
 const elements = {};
 ids.forEach(id => elements[id] = document.getElementById(id));
 const hideChatCheckbox = document.getElementById('hideChat');
+const debugModeCheckbox = document.getElementById('debugMode');
 const enabledCheckbox = document.getElementById('enabled');
-const rateBtn = document.getElementById('rateBtn');
 
 // ==========================================
 // 1. i18n Logic
@@ -11,7 +11,6 @@ const rateBtn = document.getElementById('rateBtn');
 const TRANSLATIONS = {
     // English (Default)
     'en': {
-        appName: 'YT Chat Helper',
         fonts: 'Fonts',
         fontSize: 'Font Size',
         fontRandomSize: 'Font Random Size',
@@ -22,11 +21,10 @@ const TRANSLATIONS = {
         topHalf: 'Top Half (50%)',
         bottomHalf: 'Bottom Half (50%)',
         hideChatWindow: 'Hide Chat Window',
-        rateMe: 'Rate me 5 stars ★'
+        debugMode: 'Debug Mode (Logs)'
     },
     // Simplified Chinese
     'zh': {
-        appName: 'YouTube 弹幕助手',
         fonts: '字体',
         fontSize: '字体大小',
         fontRandomSize: '字体随机大小',
@@ -37,11 +35,10 @@ const TRANSLATIONS = {
         topHalf: '上半屏 (50%)',
         bottomHalf: '下半屏 (50%)',
         hideChatWindow: '隐藏聊天窗口',
-        rateMe: '给个五星好评 ★'
+        debugMode: '调试模式 (控制台日志)'
     },
     // Traditional Chinese (zh-TW, zh-HK)
     'zh-TW': {
-        appName: 'YouTube 彈幕助手',
         fonts: '字體',
         fontSize: '字體大小',
         fontRandomSize: '字體隨機大小',
@@ -52,11 +49,10 @@ const TRANSLATIONS = {
         topHalf: '上半屏 (50%)',
         bottomHalf: '下半屏 (50%)',
         hideChatWindow: '隱藏聊天視窗',
-        rateMe: '給個五星好評 ★'
+        debugMode: '調試模式 (控制台日誌)'
     },
     // Japanese
     'ja': {
-        appName: 'YouTube 弾幕ヘルパー',
         fonts: 'フォント',
         fontSize: '文字サイズ',
         fontRandomSize: '文字サイズ (ランダム)',
@@ -67,11 +63,10 @@ const TRANSLATIONS = {
         topHalf: '上半分 (50%)',
         bottomHalf: '下半分 (50%)',
         hideChatWindow: 'チャット欄を隠す',
-        rateMe: '5つ星で評価する ★'
+        debugMode: 'デバッグモード (ログ)'
     },
     // Korean
     'ko': {
-        appName: 'YouTube 탄막 도우미',
         fonts: '글꼴',
         fontSize: '글자 크기',
         fontRandomSize: '글자 크기 (랜덤)',
@@ -82,11 +77,10 @@ const TRANSLATIONS = {
         topHalf: '상단 (50%)',
         bottomHalf: '하단 (50%)',
         hideChatWindow: '채팅창 숨기기',
-        rateMe: '별 5개 평가하기 ★'
+        debugMode: '디버그 모드'
     },
     // French
     'fr': {
-        appName: 'Assistant Chat YouTube',
         fonts: 'Polices',
         fontSize: 'Taille de police',
         fontRandomSize: 'Taille aléatoire',
@@ -97,11 +91,10 @@ const TRANSLATIONS = {
         topHalf: 'Moitié supérieure',
         bottomHalf: 'Moitié inférieure',
         hideChatWindow: 'Masquer le chat',
-        rateMe: 'Notez-moi 5 étoiles ★'
+        debugMode: 'Mode débogage'
     },
     // Thai
     'th': {
-        appName: 'ผู้ช่วยแชท YouTube',
         fonts: 'แบบอักษร',
         fontSize: 'ขนาดตัวอักษร',
         fontRandomSize: 'ขนาดสุ่ม',
@@ -112,7 +105,7 @@ const TRANSLATIONS = {
         topHalf: 'ครึ่งบน',
         bottomHalf: 'ครึ่งล่าง',
         hideChatWindow: 'ซ่อนหน้าต่างแชท',
-        rateMe: 'ให้คะแนน 5 ดาว ★'
+        debugMode: 'โหมดดีบัก'
     }
 };
 
@@ -148,19 +141,13 @@ function applyI18n() {
 // Apply translation immediately
 applyI18n();
 
-
-// ==========================================
-// 2. Rate Me Handler
-// ==========================================
-rateBtn.addEventListener('click', () => {
-    // This is a placeholder URL. Replace with real Web Store URL after publishing.
-    const fakeUrl = 'https://chrome.google.com/webstore/category/extensions';
-    chrome.tabs.create({ url: fakeUrl });
-});
+// Set dynamic version
+const manifest = chrome.runtime.getManifest();
+document.getElementById('appTitle').textContent = `Livechat Danmaku Helper v${manifest.version}`;
 
 
 // ==========================================
-// 3. Existing Settings Logic
+// 2. Settings Logic
 // ==========================================
 chrome.storage.local.get({
     enabled: true, // Default to enabled
@@ -170,7 +157,8 @@ chrome.storage.local.get({
     speed: 1.0,
     opacity: 1.0,
     position: 'all',
-    hideChat: false
+    hideChat: false,
+    debugMode: false
 }, (res) => {
     enabledCheckbox.checked = res.enabled;
     updateUiState(res.enabled);
@@ -182,6 +170,7 @@ chrome.storage.local.get({
         }
     });
     hideChatCheckbox.checked = res.hideChat;
+    debugModeCheckbox.checked = res.debugMode || false;
 });
 
 // Listen for Power Switch
@@ -196,9 +185,14 @@ hideChatCheckbox.addEventListener('change', (e) => {
     chrome.storage.local.set({ hideChat: e.target.checked });
 });
 
+// Listen for Debug Mode
+debugModeCheckbox.addEventListener('change', (e) => {
+    chrome.storage.local.set({ debugMode: e.target.checked });
+});
+
 document.body.addEventListener('input', (e) => {
     const id = e.target.id;
-    if (id === 'enabled' || id === 'hideChat') return;
+    if (id === 'enabled' || id === 'hideChat' || id === 'debugMode') return;
 
     const val = e.target.value;
     const update = {};
